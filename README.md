@@ -1,9 +1,9 @@
 # Multi-View 3D Human Pose and Shape Estimation via Model-fitting in the Loop (Multi-SPIN)
 
-##The names are ordered in alphabetical order but everyone in the group all contributed equally to this project. 
-**Jack Zhixiong Li**, 
-**Samuel Yu-Cheng Lin**, 
-**Felicia Zhixin Luo**, 		          
+##The names are ordered in alphabetical order but everyone in the group all contributed equally to this project. \
+**Jack Zhixiong Li**, \
+**Samuel Yu-Cheng Lin**, \ 
+**Felicia Zhixin Luo**, \	          
 **Boyi Qian**
 
 Our code is based on the paper: 
