@@ -32,7 +32,7 @@ You also need to download the *SMPL* model. You will need the [neutral model](ht
 ## Run demo code
 *Training* To train our network, we would need both json files from Openpose 2D keypoints detection and images files (We strongly recommend to use ffmpeg instead of opencv-python as suggested in the original gihtub code as it could save time and space a lot. The training json files were provided after fetching data, but you would need to include your own json files when evaluate the model on your own video files. More details will be released in the future. 
 
-Training from scratches (what we submitted for the midterm report
+Training from scratches (what we submitted for the midterm report)
 ```
 python3 train.py --name train_example --run_simplify --num_epoch=10 --summary_steps=300 --checkpoint_steps=300
 ```
@@ -54,5 +54,5 @@ Running the above command will compute the MPJPE and Reconstruction Error on the
 
 You can also save the results (predicted SMPL parameters, camera and 3D pose) in a .npz file using ```--result=out.npz```. Since we don't have the access to Human3.6M for now, as explained below, we only use MPI-INF-3DHP for current implementation for the midterm report, but we will use NeuralAnnot for to obtain the ground truth SMPL from Human3.6M for the final project. 
 
-## Run training code
+## Run training code (The following note was taken from SPIN project page): 
 Due to license limitiations, we cannot provide the SMPL parameters for Human3.6M (recovered using [MoSh](http://mosh.is.tue.mpg.de)). Even if you do not have access to these parameters, you can still use our training code using data from the other datasets. Again, make sure that you follow the [details for data preprocessing](datasets/preprocess/README.md).
