@@ -34,7 +34,7 @@ You also need to download the *SMPL* model. You will need the [neutral model](ht
 
 Training from scratches (what we submitted for the midterm report)
 ```
-python3 train.py --name train_example --run_simplify --num_epoch=10 --summary_steps=300 --checkpoint_steps=300
+python3 train.py --name train_example --run_smplify --num_epoch=10 --summary_steps=300 --checkpoint_steps=300
 ```
 If you need to resume the training, then simply add the args: --checkpoints ==...
 The checkpoint will be saved in logs with default settings. 
