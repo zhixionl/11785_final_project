@@ -5,8 +5,8 @@ import torch
 import numpy as np
 import scipy.misc
 import cv2
-from skimage.transform import resize
-from skimage import data
+import skimage 
+
 import constants
 
 def get_transform(center, scale, res, rot=0):
@@ -74,13 +74,10 @@ def crop(img, center, scale, res, rot=0):
 
     if not rot == 0:
         # Remove padding
-        from scipy import ndimage
-        #new_img = scipy.misc.imrotate(new_img, rot)
-        new_img = ndimage.rotate(new_img, rot)
+        new_img = skimage.transform.rotate(new_img, rot)
         new_img = new_img[pad:-pad, pad:-pad]
 
-    #new_img = scipy.misc.imresize(new_img, res)
-    new_img = resize(new_img, res)
+    new_img = skimage.transform.resize(new_img, res)
     return new_img
 
 def uncrop(img, center, scale, orig_shape, rot=0, is_rgb=True):

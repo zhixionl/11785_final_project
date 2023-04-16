@@ -25,24 +25,45 @@ class BaseDataset(Dataset):
         self.options = options
         self.img_dir = config.DATASET_FOLDERS[dataset]
         self.normalize_img = Normalize(mean=constants.IMG_NORM_MEAN, std=constants.IMG_NORM_STD)
-        self.data = np.load(config.DATASET_FILES[is_train][dataset])
-        self.imgname = self.data['imgname']
+        self.data = np.load(config.DATASET_FILES[True][dataset])
         
-
-        #print('this is shape', self.data.shape)
-
-        print(len(self.imgname))
-
+        print("MULTIVIEW")
         if dataset=='mpi-inf-3dhp':
             self.data=dict(self.data)#convert to dict since npz object not writeable
             # for k in self.data:
             #         print(self.data[k].shape)
 
-            # for k in self.data:#truncate entries from S3-S8
-            #     self.data[k]=self.data[k][:22284]
-        print(len(self.imgname))
-        print(len(self.data['imgname']))
+            for k in self.data:#truncate entries from S3-S8
+                self.data[k]=self.data[k][:22284]
 
+        self.imgname = self.data['imgname']
+
+        # indices=np.array([[None]*2]*8)
+        indices=np.empty((8,2),dtype=object)
+        
+        for idx,img in enumerate(self.imgname):
+            img=img.split("/")
+            # print(img)
+            S=int(img[0][1])
+            Seq=int(img[1][3])
+            Video=int(img[3][-1])
+            Frame=int(img[4][-10:-4])
+
+            if indices[S-1,Seq-1] is None:
+                indices[S-1,Seq-1]={}
+            if Frame not in indices[S-1,Seq-1]:
+                indices[S-1,Seq-1][Frame]=[]
+
+            indices[S-1,Seq-1][Frame].append(idx)
+
+        self.pairs=[]
+        for S in range(8):
+            for Seq in range(2):
+                for key in indices[S,Seq]:
+                    if len(indices[S,Seq][key])==2:
+                        self.pairs.append(indices[S,Seq][key])
+
+        #---------------------------------------------------ORIGINAL INIT---------------------------------------------------
         # Get paths to gt masks, if available
         try:
             self.maskname = self.data['maskname']
@@ -188,7 +209,17 @@ class BaseDataset(Dataset):
         pose = pose.astype('float32')
         return pose
 
+    #---------------------------------------------------getitem--------------------------------------------------- 
     def __getitem__(self, index):
+        pair=self.pairs[index]
+        items=[]
+        for p in pair:
+            items.append(self.get_item_original(p))
+        return items
+
+
+
+    def get_item_original(self, index):
         #sample index pair
         item = {}
         scale = self.scale[index].copy()
@@ -256,4 +287,4 @@ class BaseDataset(Dataset):
         return item
 
     def __len__(self):
-        return len(self.imgname)
+        return len(self.pairs)

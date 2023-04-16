@@ -54,6 +54,7 @@ class BaseTrainer(object):
                                                      num_workers=self.options.num_workers,
                                                      pin_memory=self.options.pin_memory,
                                                      shuffle=self.options.shuffle_train)
+            print('RUNNING EPOCH '+str(epoch))
 
             # Iterate over all batches in an epoch
             for step, batch in enumerate(tqdm(train_data_loader, desc='Epoch '+str(epoch),

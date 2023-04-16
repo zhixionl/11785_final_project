@@ -23,26 +23,28 @@ class BaseDataset(Dataset):
         self.dataset = dataset
         self.is_train = is_train
         self.options = options
-        self.img_dir = config.DATASET_FOLDERS[dataset]
+        self.img_dir = config.DATASET_FOLDERS[dataset] #'.\data\mpi_inf_3dhp'
         self.normalize_img = Normalize(mean=constants.IMG_NORM_MEAN, std=constants.IMG_NORM_STD)
         self.data = np.load(config.DATASET_FILES[is_train][dataset])
-        self.imgname = self.data['imgname']
+
         
-
-        #print('this is shape', self.data.shape)
-
-        print(len(self.imgname))
-
         if dataset=='mpi-inf-3dhp':
             self.data=dict(self.data)#convert to dict since npz object not writeable
             # for k in self.data:
             #         print(self.data[k].shape)
 
-            # for k in self.data:#truncate entries from S3-S8
-            #     self.data[k]=self.data[k][:22284]
-        print(len(self.imgname))
-        print(len(self.data['imgname']))
+            for k in self.data:#truncate entries from S3-S8
+                self.data[k]=self.data[k][:22284]
+            
 
+            # for k in self.data:
+            #         print(self.data[k].shape)
+            # print('LAST ELEM '+self.data['imgname'][-1])
+
+
+
+        self.imgname = self.data['imgname']
+        
         # Get paths to gt masks, if available
         try:
             self.maskname = self.data['maskname']
@@ -91,7 +93,6 @@ class BaseDataset(Dataset):
             keypoints_openpose = self.data['openpose']
         except KeyError:
             keypoints_openpose = np.zeros((len(self.imgname), 25, 3))
-        
         self.keypoints = np.concatenate([keypoints_openpose, keypoints_gt], axis=1)
 
         # Get gender data, if available
@@ -189,7 +190,6 @@ class BaseDataset(Dataset):
         return pose
 
     def __getitem__(self, index):
-        #sample index pair
         item = {}
         scale = self.scale[index].copy()
         center = self.center[index].copy()
@@ -199,10 +199,13 @@ class BaseDataset(Dataset):
         
         # Load image
         imgname = join(self.img_dir, self.imgname[index])
+        imgname = imgname.replace('/','\\')
+        # imgname='.\\data\\mpi_inf_3dhp\\S1\\Seq2\\imageFrames\\video_7\\frame_011755.jpg'
+
         try:
             img = cv2.imread(imgname)[:,:,::-1].copy().astype(np.float32)
         except TypeError:
-            print(imgname)
+            print('could not find'+imgname)
         orig_shape = np.array(img.shape)[:2]
 
         # Get SMPL parameters, if available

@@ -8,7 +8,7 @@ from datasets import MixedDataset
 from models import hmr, SMPL
 from smplify import SMPLify
 from utils.geometry import batch_rodrigues, perspective_projection, estimate_translation
-from utils.renderer import Renderer
+# from utils.renderer import Renderer
 from utils import BaseTrainer
 
 import config
@@ -48,7 +48,7 @@ class Trainer(BaseTrainer):
         self.fits_dict = FitsDict(self.options, self.train_ds)
 
         # Create renderer
-        self.renderer = Renderer(focal_length=self.focal_length, img_res=self.options.img_res, faces=self.smpl.faces)
+        # self.renderer = Renderer(focal_length=self.focal_length, img_res=self.options.img_res, faces=self.smpl.faces)
 
     def finalize(self):
         self.fits_dict.save()
@@ -176,7 +176,6 @@ class Trainer(BaseTrainer):
         pred_keypoints_2d = pred_keypoints_2d / (self.options.img_res / 2.)
 
         if self.options.run_smplify:
-
             # Convert predicted rotation matrices to axis-angle
             pred_rotmat_hom = torch.cat([pred_rotmat.detach().view(-1, 3, 3).detach(), torch.tensor([0,0,1], dtype=torch.float32,
                 device=self.device).view(1, 3, 1).expand(batch_size * 24, -1, -1)], dim=-1)
@@ -224,6 +223,11 @@ class Trainer(BaseTrainer):
         # Assert whether a fit is valid by comparing the joint loss with the threshold
         valid_fit = (opt_joint_loss < self.options.smplify_threshold).to(self.device)
         # Add the examples with GT parameters to the list of valid fits
+     
+
+        #converts valid_fit from boolean array to int array
+        valid_fit=valid_fit+torch.zeros(valid_fit.shape,dtype=torch.uint8).to(self.device)
+
         valid_fit = valid_fit | has_smpl
 
         opt_keypoints_2d = perspective_projection(opt_joints,
@@ -288,9 +292,9 @@ class Trainer(BaseTrainer):
         opt_vertices = output['opt_vertices']
         pred_cam_t = output['pred_cam_t']
         opt_cam_t = output['opt_cam_t']
-        images_pred = self.renderer.visualize_tb(pred_vertices, pred_cam_t, images)
-        images_opt = self.renderer.visualize_tb(opt_vertices, opt_cam_t, images)
-        self.summary_writer.add_image('pred_shape', images_pred, self.step_count)
-        self.summary_writer.add_image('opt_shape', images_opt, self.step_count)
+        # images_pred = self.renderer.visualize_tb(pred_vertices, pred_cam_t, images)
+        # images_opt = self.renderer.visualize_tb(opt_vertices, opt_cam_t, images)
+        # self.summary_writer.add_image('pred_shape', images_pred, self.step_count)
+        # self.summary_writer.add_image('opt_shape', images_opt, self.step_count)
         for loss_name, val in losses.items():
             self.summary_writer.add_scalar(loss_name, val, self.step_count)

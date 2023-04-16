@@ -5,7 +5,9 @@ It is recommended to first read datasets/preprocess/README.md
 """
 import argparse
 import config as cfg
-from datasets.preprocess import mpi_inf_3dhp_extract
+# from datasets.preprocess import mpi_inf_3dhp_extract
+from datasets.preprocess.mpi_inf_3dhp_preprocess import mpi_inf_3dhp_extract
+
 # from datasets.preprocess import h36m_extract,\
 #                                 pw3d_extract, \
 #                                 mpi_inf_3dhp_extract, \
@@ -51,7 +53,7 @@ if __name__ == '__main__':
         mpi_inf_3dhp_extract(cfg.MPI_INF_3DHP_ROOT, openpose_path, out_path, 'test')
         
         # 3DPW dataset preprocessing (test set)
-        #pw3d_extract(cfg.PW3D_ROOT, out_path)
+        pw3d_extract(cfg.PW3D_ROOT, out_path)
 
         # LSP dataset preprocessing (test set)
-        #lsp_dataset_extract(cfg.LSP_ROOT, out_path)
+        lsp_dataset_extract(cfg.LSP_ROOT, out_path)
