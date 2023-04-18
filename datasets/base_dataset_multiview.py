@@ -78,7 +78,7 @@ class BaseDataset(Dataset):
                             self.pairs.append(indices[S, Seq][key])
 
             '''dealing with crush only'''
-            self.pairs = self.pairs[:10]
+            # self.pairs = self.pairs[:10]
             print('len(self.pairs)', len(self.pairs))
 
         # Get paths to gt masks, if available
