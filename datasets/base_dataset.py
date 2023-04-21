@@ -182,6 +182,9 @@ class BaseDataset(Dataset):
         
         # Load image
         imgname = join(self.img_dir, self.imgname[index])
+        print("check immgname: ______", imgname)
+        print("check immgname: ______", self.img_dir)
+        print("check immgname: ______", self.imgname[index])
         try:
             img = cv2.imread(imgname)[:,:,::-1].copy().astype(np.float32)
         except TypeError:
