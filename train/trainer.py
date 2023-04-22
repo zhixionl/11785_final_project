@@ -5,7 +5,7 @@ from torchgeometry import angle_axis_to_rotation_matrix, rotation_matrix_to_angl
 import cv2
 
 from datasets import MixedDataset
-from models import hmr, SMPL
+from models import  SMPL, regressor, resnet50
 from smplify import SMPLify
 from utils.geometry import batch_rodrigues, perspective_projection, estimate_translation
 from utils.renderer import Renderer
@@ -21,7 +21,10 @@ class Trainer(BaseTrainer):
     def init_fn(self):
         self.train_ds = MixedDataset(self.options, ignore_3d=self.options.ignore_3d, is_train=True)
 
-        self.model = hmr(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
+        # self.model = hmr(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
+        self.resent=resnet50(pretrained=True)
+        self.regressor=regressor(config.SMPL_MEAN_PARAMS)
+
         self.optimizer = torch.optim.Adam(params=self.model.parameters(),
                                           lr=self.options.lr,
                                           weight_decay=0)
@@ -109,18 +112,19 @@ class Trainer(BaseTrainer):
         self.model.train()
 
         # Get data from the batch
-        images = input_batch['img'] # input image
-        gt_keypoints_2d = input_batch['keypoints'] # 2D keypoints
-        gt_pose = input_batch['pose'] # SMPL pose parameters
-        gt_betas = input_batch['betas'] # SMPL beta parameters
-        gt_joints = input_batch['pose_3d'] # 3D pose
-        has_smpl = input_batch['has_smpl'].byte() # flag that indicates whether SMPL parameters are valid
-        has_pose_3d = input_batch['has_pose_3d'].byte() # flag that indicates whether 3D pose is valid
-        is_flipped = input_batch['is_flipped'] # flag that indicates whether image was flipped during data augmentation
-        rot_angle = input_batch['rot_angle'] # rotation angle used for data augmentation
-        dataset_name = input_batch['dataset_name'] # name of the dataset the image comes from
-        indices = input_batch['sample_index'] # index of example inside its dataset
-        batch_size = images.shape[0]
+        images0 = input_batch['img0'] # input image
+        images1 = input_batch['img1'] # input image
+        gt_keypoints_2d = input_batch['keypoints0'] # 2D keypoints
+        gt_pose = input_batch['pose0'] # SMPL pose parameters
+        gt_betas = input_batch['betas0'] # SMPL beta parameters
+        gt_joints = input_batch['pose_3d0'] # 3D pose
+        has_smpl = input_batch['has_smpl0'].byte() # flag that indicates whether SMPL parameters are valid
+        has_pose_3d = input_batch['has_pose_3d0'].byte() # flag that indicates whether 3D pose is valid
+        is_flipped = input_batch['is_flipped0'] # flag that indicates whether image was flipped during data augmentation
+        rot_angle = input_batch['rot_angle0'] # rotation angle used for data augmentation
+        dataset_name = input_batch['dataset_name0'] # name of the dataset the image comes from
+        indices = input_batch['sample_index0'] # index of example inside its dataset
+        batch_size = images0.shape[0]
 
         # Get GT vertices and model joints
         # Note that gt_model_joints is different from gt_joints as it comes from SMPL
@@ -152,8 +156,17 @@ class Trainer(BaseTrainer):
                                                        0.5 * self.options.img_res * torch.ones(batch_size, 2, device=self.device),
                                                        gt_keypoints_2d_orig).mean(dim=-1)
 
+
+
+        ################################################################################################################################################
+
         # Feed images in the network to predict camera and SMPL parameters
-        pred_rotmat, pred_betas, pred_camera = self.model(images)
+        # pred_rotmat, pred_betas, pred_camera = self.model(images)
+
+        embedding0=self.resent.forward(images0)
+        embedding1=self.resent.forward(images1)
+
+        
 
         pred_output = self.smpl(betas=pred_betas, body_pose=pred_rotmat[:,1:], global_orient=pred_rotmat[:,0].unsqueeze(1), pose2rot=False)
         pred_vertices = pred_output.vertices
