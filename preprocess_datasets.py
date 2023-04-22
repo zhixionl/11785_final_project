@@ -5,7 +5,7 @@ It is recommended to first read datasets/preprocess/README.md
 """
 import argparse
 import config as cfg
-from datasets.preprocess import mpi_inf_3dhp_extract
+from datasets.preprocess.mpi_inf_3dhp_preprocess import mpi_inf_3dhp_extract
 # from datasets.preprocess import h36m_extract,\
 #                                 pw3d_extract, \
 #                                 mpi_inf_3dhp_extract, \
@@ -26,9 +26,10 @@ if __name__ == '__main__':
     out_path = cfg.DATASET_NPZ_PATH
     openpose_path = cfg.OPENPOSE_PATH
 
-    if args.train_files:
+    # if args.train_files:
+    print(['pass 2'])
         # MPI-INF-3DHP dataset preprocessing (training set)
-        mpi_inf_3dhp_extract(cfg.MPI_INF_3DHP_ROOT, openpose_path, out_path, 'train', extract_img=True, static_fits=cfg.STATIC_FITS_DIR)
+    mpi_inf_3dhp_extract(cfg.MPI_INF_3DHP_ROOT, openpose_path, out_path, 'train', extract_img=True, static_fits=cfg.STATIC_FITS_DIR)
 
         # LSP dataset original preprocessing (training set)
         # lsp_dataset_original_extract(cfg.LSP_ORIGINAL_ROOT, openpose_path, out_path)
@@ -42,13 +43,13 @@ if __name__ == '__main__':
         # # COCO dataset prepreocessing
         # coco_extract(cfg.COCO_ROOT, openpose_path, out_path)
 
-    if args.eval_files:
+   # if args.eval_files:
         # Human3.6M preprocessing (two protocols)
-        h36m_extract(cfg.H36M_ROOT, out_path, protocol=1, extract_img=True)
-        h36m_extract(cfg.H36M_ROOT, out_path, protocol=2, extract_img=False)
+        # h36m_extract(cfg.H36M_ROOT, out_path, protocol=1, extract_img=True)
+        # h36m_extract(cfg.H36M_ROOT, out_path, protocol=2, extract_img=False)
         
         # MPI-INF-3DHP dataset preprocessing (test set)
-        mpi_inf_3dhp_extract(cfg.MPI_INF_3DHP_ROOT, openpose_path, out_path, 'test')
+        # mpi_inf_3dhp_extract2(cfg.MPI_INF_3DHP_ROOT, openpose_path, out_path, 'test')
         
         # 3DPW dataset preprocessing (test set)
         #pw3d_extract(cfg.PW3D_ROOT, out_path)

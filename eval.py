@@ -26,7 +26,8 @@ import torchgeometry as tgm
 import config
 import constants
 from models import hmr, SMPL
-from datasets import BaseDataset
+#from datasets import BaseDataset
+from datasets.base_dataset_multiview import BaseDataset
 from utils.imutils import uncrop
 from utils.pose_utils import reconstruction_error
 #from utils.part_utils import PartRenderer
@@ -43,7 +44,7 @@ parser.add_argument('--result_file', default=None, help='If set, save detections
 
 def run_evaluation(model, dataset_name, dataset, result_file,
                    batch_size=32, img_res=224, 
-                   num_workers=32, shuffle=False, log_freq=50):
+                   num_workers=24, shuffle=False, log_freq=50):
     """Run evaluation on the datasets and metrics we report in the paper. """
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -122,11 +123,11 @@ def run_evaluation(model, dataset_name, dataset, result_file,
     # Iterate over the entire dataset
     for step, batch in enumerate(tqdm(data_loader, desc='Eval', total=len(data_loader))):
         # Get ground truth annotations from the batch
-        gt_pose = batch['pose'].to(device)
-        gt_betas = batch['betas'].to(device)
+        gt_pose = batch['pose0'].to(device)
+        gt_betas = batch['betas0'].to(device)
         gt_vertices = smpl_neutral(betas=gt_betas, body_pose=gt_pose[:, 3:], global_orient=gt_pose[:, :3]).vertices
-        images = batch['img'].to(device)
-        gender = batch['gender'].to(device)
+        images = batch['img0'].to(device)
+        gender = batch['gender0'].to(device)
         curr_batch_size = images.shape[0]
         
         with torch.no_grad():
@@ -148,7 +149,7 @@ def run_evaluation(model, dataset_name, dataset, result_file,
             J_regressor_batch = J_regressor[None, :].expand(pred_vertices.shape[0], -1, -1).to(device)
             # Get 14 ground truth joints
             if 'h36m' in dataset_name or 'mpi-inf' in dataset_name:
-                gt_keypoints_3d = batch['pose_3d'].cuda()
+                gt_keypoints_3d = batch['pose_3d0'].cuda()
                 gt_keypoints_3d = gt_keypoints_3d[:, joint_mapper_gt, :-1]
             # For 3DPW get the 14 common joints from the rendered shape
             else:
@@ -184,10 +185,10 @@ def run_evaluation(model, dataset_name, dataset, result_file,
 
         # Mask evaluation (for LSP)
         if eval_masks:
-            center = batch['center'].cpu().numpy()
-            scale = batch['scale'].cpu().numpy()
+            center = batch['center0'].cpu().numpy()
+            scale = batch['scale0'].cpu().numpy()
             # Dimensions of original image
-            orig_shape = batch['orig_shape'].cpu().numpy()
+            orig_shape = batch['orig_shape0'].cpu().numpy()
             for i in range(curr_batch_size):
                 # After rendering, convert imate back to original resolution
                 pred_mask = uncrop(mask[i].cpu().numpy(), center[i], scale[i], orig_shape[i]) > 0
@@ -206,13 +207,13 @@ def run_evaluation(model, dataset_name, dataset, result_file,
 
         # Part evaluation (for LSP)
         if eval_parts:
-            center = batch['center'].cpu().numpy()
-            scale = batch['scale'].cpu().numpy()
-            orig_shape = batch['orig_shape'].cpu().numpy()
+            center = batch['center0'].cpu().numpy()
+            scale = batch['scale0'].cpu().numpy()
+            orig_shape = batch['orig_shape0'].cpu().numpy()
             for i in range(curr_batch_size):
                 pred_parts = uncrop(parts[i].cpu().numpy().astype(np.uint8), center[i], scale[i], orig_shape[i])
                 # Load gt part segmentation
-                gt_parts = cv2.imread(os.path.join(annot_path, batch['partname'][i]), 0)
+                gt_parts = cv2.imread(os.path.join(annot_path, batch['partname0'][i]), 0)
                 # Evaluation consistent with the original UP-3D code
                 # 6 parts + background
                 for c in range(7):
