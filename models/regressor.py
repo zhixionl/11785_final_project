@@ -9,7 +9,7 @@ class Regressor(nn.Module):
     """ SMPL Iterative Regressor with ResNet50 backbone
     """
 
-    def __init__(self, block, layers, smpl_mean_params):
+    def __init__(self, block, smpl_mean_params):
         self.inplanes = 64
         super(Regressor, self).__init__()
         npose = 24 * 6
@@ -62,12 +62,4 @@ class Regressor(nn.Module):
         pred_rotmat = rot6d_to_rotmat(pred_pose).view(batch_size, 24, 3, 3)
 
         return pred_rotmat, pred_shape, pred_cam
-
-def regressor(smpl_mean_params, **kwargs):
-    """ Constructs an HMR model with ResNet50 backbone.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Regressor(smpl_mean_params, **kwargs)
-    return model
 
