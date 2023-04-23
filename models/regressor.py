@@ -9,12 +9,18 @@ class Regressor(nn.Module):
     """ SMPL Iterative Regressor with ResNet50 backbone
     """
 
-    def __init__(self, block, smpl_mean_params):
+    def __init__(self, smpl_mean_params, encoder = 'resnet'):
         self.inplanes = 64
         super(Regressor, self).__init__()
         npose = 24 * 6
+        self.expansion = 4
+        self.encoder = encoder
 
-        self.fc1 = nn.Linear(512 * block.expansion + npose + 13, 1024)
+        if self.encoder == 'resnet':
+            self.fc1 = nn.Linear(512 * self.expansion + npose + 13, 1024)
+        else:
+            self.fc1 = nn.Linear(250 * self.expansion + npose + 13, 1024)  # convnext only 
+
         self.drop1 = nn.Dropout()
         self.fc2 = nn.Linear(1024, 1024)
         self.drop2 = nn.Dropout()
@@ -62,4 +68,3 @@ class Regressor(nn.Module):
         pred_rotmat = rot6d_to_rotmat(pred_pose).view(batch_size, 24, 3, 3)
 
         return pred_rotmat, pred_shape, pred_cam
-

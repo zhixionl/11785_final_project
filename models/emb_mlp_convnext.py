@@ -1,26 +1,31 @@
-
 import torch
 import torch.nn as nn
-from .resnet import resnet50
+import torchvision
+
+from .convnext import convnext_T
 from .regressor import Regressor
 
 
-class emb_mlp(nn.Module):
+class emb_mlp_convnext(nn.Module):
     def __init__(self, smpl_mean_params, pretrained=True):
-        super(emb_mlp, self).__init__()
-        self.resnet = resnet50(pretrained=pretrained)
-        self.regressor = Regressor(smpl_mean_params, encoder='resnet')
+        super(emb_mlp_convnext, self).__init__()
+        self.encoder = convnext_T(pretrained=pretrained)
+        self.regressor = Regressor(smpl_mean_params, encoder = 'convnext')
         self.mlp=nn.Sequential(
-            torch.nn.Linear(4096, 2048),
+            torch.nn.Linear(2000, 2048),
+            torch.nn.BatchNorm1d(2048),
             torch.nn.GELU(),
-            torch.nn.Linear(2048, 2048)
+            torch.nn.Linear(2048, 1000)
         )
+
 
     def forward(self, img0,img1, init_pose=None, init_shape=None, init_cam=None, n_iter=3):
 
         #resnet embeddings
-        e1=self.resnet.forward(img1)#compute e1 first to cache forward info of e0
-        e0=self.resnet.forward(img0)
+        e1=self.encoder.forward(img1)#compute e1 first to cache forward info of e0
+        
+        e0=self.encoder.forward(img0)
+        #print('e1.shape', e1.shape) # should be (batch_size, 2048)
 
         #
         pred_rotmat0, pred_betas0, pred_camera0=self.regressor.forward(e0, init_pose=init_pose, init_shape=init_shape, init_cam=init_cam, n_iter=3)
@@ -45,4 +50,3 @@ class emb_mlp(nn.Module):
         pred_camera_final=pred_camera0
 
         return pred_rotmat_final,pred_betas_final,pred_camera_final
-    
