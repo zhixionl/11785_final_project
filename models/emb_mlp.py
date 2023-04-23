@@ -4,9 +4,9 @@ from .resnet import resnet50
 from .regressor import Regressor
 
 
-class emb_avg(nn.Module):
+class emb_mlp(nn.Module):
     def __init__(self, smpl_mean_params, pretrained=True):
-        super(emb_avg, self).__init__()
+        super(emb_mlp, self).__init__()
         self.resnet = resnet50(pretrained=pretrained)
         self.regressor = Regressor(smpl_mean_params)
         self.mlp=nn.Sequential(
