@@ -11,23 +11,23 @@ LSP_ORIGINAL_ROOT = ''
 LSPET_ROOT = ''
 MPII_ROOT = ''
 COCO_ROOT = ''
-MPI_INF_3DHP_ROOT = 'datasets/MPI_INF_3DHP'
+MPI_INF_3DHP_ROOT = '/home/jack/Desktop/Project/SPIN-master/datasets/MPI_INF_3DHP'
 PW3D_ROOT = ''
 UPI_S1H_ROOT = ''
 
 # Output folder to save test/train npz files
-DATASET_NPZ_PATH = 'data/dataset_extras'
+DATASET_NPZ_PATH = '/home/jack/Desktop/Project/SPIN-master/data/dataset_extras'
 
 # Output folder to store the openpose detections
 # This is requires only in case you want to regenerate 
 # the .npz files with the annotations.
-OPENPOSE_PATH = 'datasets/openpose'
+OPENPOSE_PATH = '/home/jack/Desktop/Project/SPIN-master/datasets/openpose'
 
 # Path to test/train npz files
 DATASET_FILES = [ {'h36m-p1': join(DATASET_NPZ_PATH, 'h36m_valid_protocol1.npz'),
                    'h36m-p2': join(DATASET_NPZ_PATH, 'h36m_valid_protocol2.npz'),
                    'lsp': join(DATASET_NPZ_PATH, 'lsp_dataset_test.npz'),
-                   'mpi-inf-3dhp': join(DATASET_NPZ_PATH, 'mpi_inf_3dhp_test_s8.npz'),
+                   'mpi-inf-3dhp': join(DATASET_NPZ_PATH, 'mpi_inf_3dhp_valid_s7.npz'),
                    '3dpw': join(DATASET_NPZ_PATH, '3dpw_test.npz'),
                   },
 
@@ -36,7 +36,7 @@ DATASET_FILES = [ {'h36m-p1': join(DATASET_NPZ_PATH, 'h36m_valid_protocol1.npz')
                    'mpii': join(DATASET_NPZ_PATH, 'mpii_train.npz'),
                    'coco': join(DATASET_NPZ_PATH, 'coco_2014_train.npz'),
                    'lspet': join(DATASET_NPZ_PATH, 'hr-lspet_train.npz'),
-                   'mpi-inf-3dhp': join(DATASET_NPZ_PATH, 'mpi_inf_3dhp_train_s1-7.npz')
+                   'mpi-inf-3dhp': join(DATASET_NPZ_PATH, 'mpi_inf_3dhp_train_s1-6_finetune.npz')
                   }
                 ]
 
@@ -53,10 +53,10 @@ DATASET_FOLDERS = {'h36m': H36M_ROOT,
                    'upi-s1h': UPI_S1H_ROOT,
                 }
 
-CUBE_PARTS_FILE = 'data/cube_parts.npy'
-JOINT_REGRESSOR_TRAIN_EXTRA = 'data/J_regressor_extra.npy'
-JOINT_REGRESSOR_H36M = 'data/J_regressor_h36m.npy'
-VERTEX_TEXTURE_FILE = 'data/vertex_texture.npy'
-STATIC_FITS_DIR = 'data/static_fits'
-SMPL_MEAN_PARAMS = 'data/smpl_mean_params.npz'
-SMPL_MODEL_DIR = 'data/smpl'
+CUBE_PARTS_FILE = '/home/jack/Desktop/Project/SPIN-master/data/cube_parts.npy'
+JOINT_REGRESSOR_TRAIN_EXTRA = '/home/jack/Desktop/Project/SPIN-master/data/J_regressor_extra.npy'
+JOINT_REGRESSOR_H36M = '/home/jack/Desktop/Project/SPIN-master/data/J_regressor_h36m.npy'
+VERTEX_TEXTURE_FILE = '/home/jack/Desktop/Project/SPIN-master/data/vertex_texture.npy'
+STATIC_FITS_DIR = '/home/jack/Desktop/Project/SPIN-master/data/static_fits'
+SMPL_MEAN_PARAMS = '/home/jack/Desktop/Project/SPIN-master/data/smpl_mean_params.npz'
+SMPL_MODEL_DIR = '/home/jack/Desktop/Project/SPIN-master/data/smpl'
