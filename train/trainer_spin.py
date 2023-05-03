@@ -1,17 +1,5 @@
-""""
-If you want to train the model, please use: 
-
-####### Full-training  studies #######
-#python3 train.py --name train_example --run_smplify --num_epoch=25 --summary_steps=350 --checkpoint_steps=350 --test_steps=350 --batch_size=32
-
-####### Ablation studies #######
-#python3 train.py --name train_example --run_smplify --num_epoch=10 --summary_steps=75 --checkpoint_steps=75 --test_steps=75 --batch_size=32
-
-####### Load pretrain models ######## 
--pretrained_checkpoint=data/model_checkpoint.pt 
-#python3 train.py --name train_example --run_smplify --num_epoch=25 --summary_steps=372 --checkpoint_steps=372 --test_steps=372 --batch_size=32 --resume --checkpoint=logs/train_example/checkpoints/2023_04_26-21_04_10.pt
-
-
+"""
+This is the original files for the SPIN algorihtm 
 """
 
 import torch
@@ -21,14 +9,7 @@ from torchgeometry import angle_axis_to_rotation_matrix, rotation_matrix_to_angl
 import cv2
 
 from datasets import MixedDataset
-from datasets.base_dataset_multiview import BaseDataset
-from models import  SMPL
-from models.resnet import resnet50
-from models.regressor import regressor
-from models.emb_avg import emb_avg
-from models.emb_mlp import emb_mlp
-from models.emb_mlp_convnext import emb_mlp_convnext
-from models.emb_conv1d import emb_conv1d
+from models import hmr, SMPL
 from smplify import SMPLify
 from utils.geometry import batch_rodrigues, perspective_projection, estimate_translation
 from utils.renderer import Renderer
@@ -38,30 +19,19 @@ import config
 import constants
 from .fits_dict import FitsDict
 
+
 class Trainer(BaseTrainer):
     
     def init_fn(self):
-        self.scaler = torch.cuda.amp.GradScaler()
         self.train_ds = MixedDataset(self.options, ignore_3d=self.options.ignore_3d, is_train=True)
-        
-        #####   Choose your model   #####
-        #self.model = emb_conv1d(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
-        #self.model = emb_avg(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
-        self.model = emb_mlp_convnext(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
-        #self.model = emb_mlp(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
-        #self.resnet=resnet50(pretrained=True).to(self.device)
-        #self.regressor=regressor(config.SMPL_MEAN_PARAMS).to(self.device)
 
-        self.optimizer = torch.optim.AdamW(params=self.model.parameters(),
-                                         lr=self.options.lr,
-                                         weight_decay=0)
-        
-        #self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=0.9)
-
+        self.model = hmr(config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
+        self.optimizer = torch.optim.Adam(params=self.model.parameters(),
+                                          lr=self.options.lr,
+                                          weight_decay=0)
         self.smpl = SMPL(config.SMPL_MODEL_DIR,
                          batch_size=self.options.batch_size,
                          create_transl=False).to(self.device)
-        
         # Per-vertex loss on the shape
         self.criterion_shape = nn.L1Loss().to(self.device)
         # Keypoint (2D and 3D) loss
@@ -77,12 +47,7 @@ class Trainer(BaseTrainer):
         self.smplify = SMPLify(step_size=1e-2, batch_size=self.options.batch_size, num_iters=self.options.num_smplify_iters, focal_length=self.focal_length)
         if self.options.pretrained_checkpoint is not None:
             self.load_pretrained(checkpoint_file=self.options.pretrained_checkpoint)
-            checkpoint = torch.load(checkpoint_file=self.options.pretrained_checkpoint)
-            for model in self.models_dict:
-                if model in checkpoint:
-                    self.models_dict[model].load_state_dict(checkpoint[model], strict=False)
-                    self.optimizer.load_state_dict(self.optimizers_dict['optimizer'])
-                    print('Checkpoint loaded')
+
         # Load dictionary of fits
         self.fits_dict = FitsDict(self.options, self.train_ds)
 
@@ -146,23 +111,20 @@ class Trainer(BaseTrainer):
 
     def train_step(self, input_batch):
         self.model.train()
-        self.losses = []
 
         # Get data from the batch
-        images0 = input_batch['img0'] # input image
-      #  print(images0.shape)
-        images1 = input_batch['img1'] # input image
-        gt_keypoints_2d = input_batch['keypoints0'] # 2D keypoints
-        gt_pose = input_batch['pose0'] # SMPL pose parameters
-        gt_betas = input_batch['betas0'] # SMPL beta parameters
-        gt_joints = input_batch['pose_3d0'] # 3D pose
-        has_smpl = input_batch['has_smpl0'].byte() # flag that indicates whether SMPL parameters are valid
-        has_pose_3d = input_batch['has_pose_3d0'].byte() # flag that indicates whether 3D pose is valid
-        is_flipped = input_batch['is_flipped0'] # flag that indicates whether image was flipped during data augmentation
-        rot_angle = input_batch['rot_angle0'] # rotation angle used for data augmentation
-        dataset_name = input_batch['dataset_name0'] # name of the dataset the image comes from
-        indices = input_batch['sample_index0'] # index of example inside its dataset
-        batch_size = images0.shape[0]
+        images = input_batch['img'] # input image
+        gt_keypoints_2d = input_batch['keypoints'] # 2D keypoints
+        gt_pose = input_batch['pose'] # SMPL pose parameters
+        gt_betas = input_batch['betas'] # SMPL beta parameters
+        gt_joints = input_batch['pose_3d'] # 3D pose
+        has_smpl = input_batch['has_smpl'].byte() # flag that indicates whether SMPL parameters are valid
+        has_pose_3d = input_batch['has_pose_3d'].byte() # flag that indicates whether 3D pose is valid
+        is_flipped = input_batch['is_flipped'] # flag that indicates whether image was flipped during data augmentation
+        rot_angle = input_batch['rot_angle'] # rotation angle used for data augmentation
+        dataset_name = input_batch['dataset_name'] # name of the dataset the image comes from
+        indices = input_batch['sample_index'] # index of example inside its dataset
+        batch_size = images.shape[0]
 
         # Get GT vertices and model joints
         # Note that gt_model_joints is different from gt_joints as it comes from SMPL
@@ -194,12 +156,8 @@ class Trainer(BaseTrainer):
                                                        0.5 * self.options.img_res * torch.ones(batch_size, 2, device=self.device),
                                                        gt_keypoints_2d_orig).mean(dim=-1)
 
-
-
-        ################################################################################################################################################
-
         # Feed images in the network to predict camera and SMPL parameters
-        pred_rotmat, pred_betas, pred_camera = self.model(images0, images1)
+        pred_rotmat, pred_betas, pred_camera = self.model(images)
 
         pred_output = self.smpl(betas=pred_betas, body_pose=pred_rotmat[:,1:], global_orient=pred_rotmat[:,0].unsqueeze(1), pose2rot=False)
         pred_vertices = pred_output.vertices
@@ -243,6 +201,7 @@ class Trainer(BaseTrainer):
             # Will update the dictionary for the examples where the new loss is less than the current one
             update = (new_opt_joint_loss < opt_joint_loss)
             
+
             opt_joint_loss[update] = new_opt_joint_loss[update]
             opt_vertices[update, :] = new_opt_vertices[update, :]
             opt_joints[update, :] = new_opt_joints[update, :]
@@ -304,17 +263,11 @@ class Trainer(BaseTrainer):
                ((torch.exp(-pred_camera[:,0]*10)) ** 2 ).mean()
         loss *= 60
 
-        self.losses.append(loss)
+
         # Do backprop
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-        ### Uncomment it if you plan to use the mix-precision  ###
-        #self.scaler.scale(loss).backward()
-        #self.scaler.step(self.optimizer)
-        #self.scheduler.step()
-        #self.scaler.update()
 
         # Pack output arguments for tensorboard logging
         output = {'pred_vertices': pred_vertices.detach(),
