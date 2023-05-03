@@ -53,6 +53,7 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
     vid_list = list(range(3)) + list(range(4,9))
 
     ### Uncomment this code if you need to create create image frames  ###
+
     # for user_i in user_list:
     #     for seq_i in seq_list:
     #         seq_path = os.path.join(dataset_path, 'S' + str(user_i), 'Seq' + str(seq_i))
@@ -125,13 +126,11 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
 
                     # for each image we store the relevant annotations
                     img_name = img_i.split('/')[-1]
-                    # print("img_name: ", img_name)
                     img_view = os.path.join('S' + str(user_i),
                                             'Seq' + str(seq_i),
                                             'imageFrames',
                                             'video_' + str(vid_i),
                                             img_name)
-                    #print(img_view)
                     joints = np.reshape(annot2[vid_i][0][i], (28, 2))[joints17_idx]
                     S17 = np.reshape(annot3[vid_i][0][i], (28, 3))/1000
                     S17 = S17[joints17_idx] - S17[4] # 4 is the root
@@ -146,7 +145,6 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
                     ok_pts = np.logical_and(x_in, y_in)
                     if np.sum(ok_pts) < len(joints_idx):
                         continue
-                    
 
                     counter += 1
                     if counter % 10 != 1:

@@ -1,3 +1,5 @@
+### This file is only for visualization ###
+
 import os
 import sys
 import cv2
@@ -41,7 +43,7 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
     counter = 0
 
     for user_i in user_list:
-        if user_i == 8:
+        if user_i != 8:
             continue
 
         for seq_i in seq_list:
@@ -55,14 +57,16 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
             # calibration file and camera parameters
             calib_file = os.path.join(seq_path, 'camera.calibration')
             Ks, Rs, Ts = read_calibration(calib_file, vid_list)
-        
+
             for j, vid_i in enumerate(vid_list):
+
+                if vid_i > 1:
+                    continue
 
                 # image folder
                 imgs_path = os.path.join(seq_path,    
                                          'imageFrames',
                                          'video_' + str(vid_i))
-
             
                 # per frame
                 cam_aa = cv2.Rodrigues(Rs[j])[0].T[0]
@@ -114,7 +118,7 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
     # store the data struct
     if not os.path.isdir(out_path):
         os.makedirs(out_path)
-    out_file = os.path.join(out_path, 'mpi_inf_3dhp_train_s1-7.npz')
+    out_file = os.path.join(out_path, 'mpi_inf_3dhp_video.npz')
     if fits_3d is not None:
         fits_3d = np.load(fits_3d)
         np.savez(out_file, imgname=imgnames_,
@@ -130,8 +134,7 @@ def train_data(dataset_path, openpose_path, out_path, joints_idx, scaleFactor, e
                            center=centers_,
                            scale=scales_,
                            part=parts_,
-                           S=Ss_)     
-        
+                           S=Ss_)   
         
 def test_data(dataset_path, out_path, joints_idx, scaleFactor):
 
@@ -146,7 +149,6 @@ def test_data(dataset_path, out_path, joints_idx, scaleFactor):
         seq_path = os.path.join(dataset_path,
                                 'mpi_inf_3dhp_test_set',
                                 'TS' + str(user_i))
-        
         # mat file with annotations
         annot_file = os.path.join(seq_path, 'annot_data.mat')
         mat_as_h5 = h5py.File(annot_file, 'r')
