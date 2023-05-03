@@ -1,3 +1,7 @@
+"""
+This is backbone for  Regressor with either Convnext or Resnet50
+"""
+
 import torch
 import torch.nn as nn
 import torchvision.models.resnet as resnet
@@ -50,7 +54,6 @@ class Regressor(nn.Module):
             init_shape = self.init_shape.expand(batch_size, -1)
         if init_cam is None:
             init_cam = self.init_cam.expand(batch_size, -1)
-
 
         pred_pose = init_pose
         pred_shape = init_shape
