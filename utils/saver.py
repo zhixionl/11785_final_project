@@ -1,7 +1,6 @@
 from __future__ import division
 import os
 import datetime
-
 import torch
 
 class CheckpointSaver():
@@ -38,7 +37,7 @@ class CheckpointSaver():
         print(timestamp, 'Epoch:', epoch, 'Iteration:', batch_idx)
         print('Saving checkpoint file [' + checkpoint_filename + ']')
         torch.save(checkpoint, checkpoint_filename) 
-        return
+        return checkpoint_filename
 
     def load_checkpoint(self, models, optimizers, checkpoint_file=None):
         """Load a checkpoint."""

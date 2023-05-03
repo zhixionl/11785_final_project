@@ -2,10 +2,12 @@ from __future__ import division
 import sys
 import time
 
+import subprocess
 import torch
 from tqdm import tqdm
 tqdm.monitor_interval = 0
 from torch.utils.tensorboard import SummaryWriter
+import wandb
 
 from utils import CheckpointDataLoader, CheckpointSaver
 
@@ -21,6 +23,7 @@ class BaseTrainer(object):
         self.init_fn()
         self.saver = CheckpointSaver(save_dir=options.checkpoint_dir)
         self.summary_writer = SummaryWriter(self.options.summary_dir)
+        self.scaler = torch.cuda.amp.GradScaler()
 
         self.checkpoint = None
         if self.options.resume and self.saver.exists_checkpoint():
@@ -42,11 +45,14 @@ class BaseTrainer(object):
             for model in self.models_dict:
                 if model in checkpoint:
                     self.models_dict[model].load_state_dict(checkpoint[model], strict=False)
+                    #self.opt
                     print('Checkpoint loaded')
-
+                    
     def train(self):
         """Training process."""
         # Run training for num_epochs epochs
+        loss_print_count = 0
+        to_return_loss = []
         for epoch in tqdm(range(self.epoch_count, self.options.num_epochs), total=self.options.num_epochs, initial=self.epoch_count):
             # Create new DataLoader every epoch and (possibly) resume from an arbitrary step inside an epoch
             train_data_loader = CheckpointDataLoader(self.train_ds,checkpoint=self.checkpoint,
@@ -63,18 +69,21 @@ class BaseTrainer(object):
                 if time.time() < self.endtime:
                     batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k,v in batch.items()}
                     out = self.train_step(batch)
+                    to_return_loss.append(out[1])
+                    loss_print_count += 1
+                    if loss_print_count % 50 == 1:
+                        print(out[1])
                     self.step_count += 1
-                    # Tensorboard logging every summary_steps steps
-                    if self.step_count % self.options.summary_steps == 0:
-                        self.train_summaries(batch, *out)
+
                     # Save checkpoint every checkpoint_steps steps
+                    name = ''
                     if self.step_count % self.options.checkpoint_steps == 0:
-                        self.saver.save_checkpoint(self.models_dict, self.optimizers_dict, epoch, step+1, self.options.batch_size, train_data_loader.sampler.dataset_perm, self.step_count)
+                        name = self.saver.save_checkpoint(self.models_dict, self.optimizers_dict, epoch, step+1, self.options.batch_size, train_data_loader.sampler.dataset_perm, self.step_count)
                         tqdm.write('Checkpoint saved')
 
                     # Run validation every test_steps steps
                     if self.step_count % self.options.test_steps == 0:
-                        self.test()
+                        self.test(name)
                 else:
                     tqdm.write('Timeout reached')
                     self.finalize()
@@ -89,6 +98,9 @@ class BaseTrainer(object):
             if (epoch+1) % 10 == 0:
                 # self.saver.save_checkpoint(self.models_dict, self.optimizers_dict, epoch+1, 0, self.step_count)
                 self.saver.save_checkpoint(self.models_dict, self.optimizers_dict, epoch+1, 0, self.options.batch_size, None, self.step_count)
+            torch.save(to_return_loss, ('epoch_' + str(epoch) + '_loss_tracker.pt'))
+            wandb.log({"train_loss":out[1]})
+            wandb.save('checkpoint.pth')
         return
 
     # The following methods (with the possible exception of test) have to be implemented in the derived classes
@@ -101,5 +113,13 @@ class BaseTrainer(object):
     def train_summaries(self, input_batch):
         raise NotImplementedError('You need to provide a _train_summaries method')
 
-    def test(self):
-        pass
+
+    ###### run the evaluation, but change to eval_multiview for Method 1 ######
+    def test(self, name):
+        checkpt = "--checkpoint=" + str(name)
+
+        command = ["python3", "eval_multiview_exp3.py"]
+        command = command + [checkpt] + ["--dataset=mpi-inf-3dhp", "--log_freq=35"]
+
+        print(command)
+        subprocess.run(command)
