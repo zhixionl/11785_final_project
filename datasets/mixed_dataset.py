@@ -4,30 +4,24 @@ This file contains the definition of different heterogeneous datasets used for t
 import torch
 import numpy as np
 
-from .base_dataset import BaseDataset
+from .base_dataset_multiview import BaseDataset
+#from .base_dataset import BaseDataset  # Change to this if you want to use monocular 
 
 class MixedDataset(torch.utils.data.Dataset):
 
     def __init__(self, options, **kwargs):
-        self.dataset_list = ['h36m', 'lsp-orig', 'mpii', 'lspet', 'coco', 'mpi-inf-3dhp']
-        print('pass 1')
-        self.dataset_dict = {'h36m': 0, 'lsp-orig': 1, 'mpii': 2, 'lspet': 3, 'coco': 4, 'mpi-inf-3dhp': 5}
-        self.datasets = [BaseDataset(options, ds, **kwargs) for ds in self.dataset_list]
-        total_length = sum([len(ds) for ds in self.datasets])
-        length_itw = sum([len(ds) for ds in self.datasets[1:-1]])
-        self.length = max([len(ds) for ds in self.datasets])
+        self.dataset_list = ['mpi-inf-3dhp']
 
-        print('pass2')
+        self.dataset_dict = {'mpi-inf-3dhp': 5}
+        self.datasets = [BaseDataset(options, ds, **kwargs) for ds in self.dataset_list]
+        self.length = max([len(ds) for ds in self.datasets])
 
         """
         Data distribution inside each batch:
-        30% H36M - 60% ITW - 10% MPI-INF
+        0% H36M - 100% MPI-INF
         """
-        self.partition = [0, 0*len(self.datasets[1])/length_itw,
-                          0*len(self.datasets[2])/length_itw,
-                          0*len(self.datasets[3])/length_itw, 
-                          0*len(self.datasets[4])/length_itw,
-                          1.0]
+
+        self.partition = [1.0]
         self.partition = np.array(self.partition).cumsum()
 
     def __getitem__(self, index):

@@ -15,7 +15,9 @@ class BaseDataset(Dataset):
     """
     Base Dataset Class - Handles data loading and augmentation.
     Able to handle heterogeneous datasets (different annotations available for different datasets).
-    You need to update the path to each dataset in utils/config.py.
+    You need to update the path to each dataset in utils/config.py
+    
+    This fle is only used for the monocular background comparison.
     """
 
     def __init__(self, options, dataset, ignore_3d=False, use_augmentation=True, is_train=True):
@@ -27,16 +29,6 @@ class BaseDataset(Dataset):
         self.normalize_img = Normalize(mean=constants.IMG_NORM_MEAN, std=constants.IMG_NORM_STD)
         self.data = np.load(config.DATASET_FILES[is_train][dataset])
         self.imgname = self.data['imgname']
-        
-
-        #print('this is shape', self.data.shape)
-
-        # if dataset == 'mpi-inf-3dhp':
-        #     self.data = dict(self.data)
-
-        #     for k in self.data:
-        #         self.data[k] = self.data
-
 
         # Get paths to gt masks, if available
         try:

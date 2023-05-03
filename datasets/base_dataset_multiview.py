@@ -29,10 +29,8 @@ class BaseDataset(Dataset):
         self.normalize_img = Normalize(mean=constants.IMG_NORM_MEAN, std=constants.IMG_NORM_STD)
 
         # Change 
-        #self.data = np.load(config.DATASET_FILES[True][dataset])
         self.data = np.load(config.DATASET_FILES[is_train][dataset])
         self.data=dict(self.data)
-
         self.imgname = self.data['imgname']
 
         # get index pairs of same frame, different video(view)
@@ -44,37 +42,36 @@ class BaseDataset(Dataset):
             self.Ts = []
 
             for idx, img in enumerate(self.imgname):
-               # print(img)
                 img = img.split('/')
-                #print(img)
                 S = int(img[0][-1])
-                # print('S', S)
                 Seq = int(img[1][-1])
-                # print('Seq', Seq)
                 Video = int(img[3][-1])
-                # print('Video', Video)
                 Frame = int(img[4][-10:-4])
-                # print('Frame', Frame)
 
                 if indices[S-1, Seq-1] is None:
                     indices[S-1, Seq-1] = {}
                 if Frame not in indices[S-1, Seq-1]:
                     indices[S-1, Seq-1][Frame] = []
                 indices[S-1, Seq-1][Frame].append(idx)
-                # break
-            random.seed(10)
-            for S in range(8):
-                if S == 7:
-                    for Seq in range(2):
-                        for key in indices[S,Seq]:
-                            if len(indices[S, Seq][key]) >= 2:
-                                #self.pairs.append(indices[S, Seq][key])
-                                ordering = random.sample(range(len(indices[S, Seq][key])), len(indices[S, Seq][key]))
-                                for i in range(len((indices[S, Seq][key]))// 2):
-                                    self.pairs.append((indices[S, Seq][key][ordering[2*i]], 
-                                                        indices[S, Seq][key][ordering[2*i+1]]))
-                                
 
+            random.seed(10)
+
+            ## Change this line to 6, and 6, 7 if you are doing ablation studies
+            if is_train:
+                r = range(7)
+            else:
+                r = range(7, 8)
+            for S in r:
+                for Seq in range(2):
+                    for key in indices[S,Seq]:
+                        if len(indices[S, Seq][key]) >= 2:
+                            
+                            # randomly pair two points together for the 
+                            ordering = random.sample(range(len(indices[S, Seq][key])), len(indices[S, Seq][key]))
+                            for i in range(len((indices[S, Seq][key]))// 2):
+                                self.pairs.append((indices[S, Seq][key][ordering[2*i]], 
+                                                    indices[S, Seq][key][ordering[2*i+1]]))
+                                
         # Get paths to gt masks, if available
         try:
             self.maskname = self.data['maskname']
@@ -88,12 +85,6 @@ class BaseDataset(Dataset):
         # Bounding boxes are assumed to be in the center and scale format
         self.scale = self.data['scale']
         self.center = self.data['center']
-
-        # self.keypoints2d = self.data['keypoints_2d']
-        # self.keypoints3d = self.data['keypoints_3d']
-        # self.keypoints3d_uni = self.data['keypoints_3d_uni']
-        # self.Rs = self.data['R']
-        # self.Ts = self.data['T']
         
         # If False, do not do augmentation
         self.use_augmentation = use_augmentation
@@ -129,7 +120,7 @@ class BaseDataset(Dataset):
             keypoints_openpose = self.data['openpose']
         except KeyError:
             keypoints_openpose = np.zeros((len(self.imgname), 25, 3))
-        #self.keypoints = np.concatenate([keypoints_openpose, keypoints_gt], axis=1)
+        self.keypoints = np.concatenate([keypoints_openpose, keypoints_gt], axis=1)
 
         # Get gender data, if available
         try:
@@ -243,12 +234,12 @@ class BaseDataset(Dataset):
 
 
         # Get SMPL parameters, if available
-        # if self.has_smpl[index]:
-        #     pose = self.pose[index].copy()
-        #     betas = self.betas[index].copy()
-        # else:
-        pose = np.zeros(72)
-        betas = np.zeros(10)
+        if self.has_smpl[index]:
+            pose = self.pose[index].copy()
+            betas = self.betas[index].copy()
+        else:
+            pose = np.zeros(72)
+            betas = np.zeros(10)
 
         # Process image
         img = self.rgb_processing(img, center, sc*scale, rot, flip, pn)
@@ -266,16 +257,12 @@ class BaseDataset(Dataset):
             item['pose_3d'] = torch.from_numpy(self.j3d_processing(S, rot, flip)).float()
         else:
             item['pose_3d'] = torch.zeros(24,4, dtype=torch.float32)
-            
-        #item['keypoints2d'] = self.keypoints2d[index]
-        #item['keypoints3d'] = self.keypoints3d[index]
-        #item['keypoints3d_uni'] = self.keypoints3d_uni[index]
 
         # Get 2D keypoints and apply augmentation transforms
-        #keypoints = self.keypoints[index].copy()
-        #item['keypoints'] = torch.from_numpy(self.j2d_processing(keypoints, center, sc*scale, rot, flip)).float()
+        keypoints = self.keypoints[index].copy()
+        item['keypoints'] = torch.from_numpy(self.j2d_processing(keypoints, center, sc*scale, rot, flip)).float()
 
-        #item['has_smpl'] = self.has_smpl[index]
+        item['has_smpl'] = self.has_smpl[index]
         item['has_pose_3d'] = self.has_pose_3d
         item['scale'] = float(sc * scale)
         item['center'] = center.astype(np.float32)
@@ -285,8 +272,6 @@ class BaseDataset(Dataset):
         item['gender'] = self.gender[index]
         item['sample_index'] = index
         item['dataset_name'] = self.dataset
-      #  item['R'] = self.Rs[index]
-      #  item['T'] = self.Ts[index]
 
         try:
             item['maskname'] = self.maskname[index]
@@ -300,33 +285,10 @@ class BaseDataset(Dataset):
         return item
     
     def __getitem__(self, index):
-        items = []
         temp = {}
-        #print('pair')
-        #print("22222222s: ", self.pairs[index])
         for i,p in enumerate(self.pairs[index]):
-            #print('1111111111111111111111s',len(self.pairs[index]))
-            #print(self.pairs[index])
             
             item = self.get_item_original(p)
-            #img_name = item['imgname']
-            # K, R, T = self.read_calibration(img_name)
-            # # print(img_name)
-            # # print(K)
-            # # print(R)
-            # # print(T)
-            # item['K'] = K
-            # item['R'] = R
-            # item['T'] = T
-
-            # calcualte projected 3D global keypts 
-            
-            # de-normalize S as 3D keypoints
-            #print("current img_name ", img_name)
-           # print(item['scaled_3d_keypts'][:, :3])
-            #keypts_3d_global = self.cam_to_world(item['scaled_3d_keypts'][:, :3], R, T)
-            #keypts_3d_global = item['keypoints3d_uni']
-            #print('global ', keypts_3d_global)
       
             for k in item:
                 temp[k+str(i)] = item[k]
@@ -361,17 +323,9 @@ class BaseDataset(Dataset):
         file.close()
         return K, R, T
     
-
     def cam_to_world(self,local3D, R, T):
         # convert the local 3D keypoints from cameras view to global view
         global3D = R.T.dot(local3D.T - T[:, None])
 
         return global3D.T
     
-
-                            #     print(self.data['imgname'][indices[S, Seq][key]])
-                            # video_name = video_num = self.data['imgname'][indices[S, Seq][key]].split("/")[2]
-                            # print(video_name)
-
-                            # cam_file = os.path.join(config.MPI_INF_3DHP_ROOT, S, Seq, 'camera.calibration')
-                            # #x, y, z = read_calibration(cam_file, )
