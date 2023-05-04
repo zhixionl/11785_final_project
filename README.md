@@ -1,9 +1,9 @@
-# Multi-View 3D Human Pose and Shape Estimation via Model-fitting in the Loop (Multi-SPIN)
+# Multi-view 3D Human Body Mesh Reconstruction through Iterative Regression and Optimization (Multi-SPIN)
 
 #### The names are ordered in alphabetical order but everyone in the group all contributed equally to this project. 
 **Jack Zhixiong Li**,   **Samuel Yu-Cheng Lin**,   **Felicia Zhixin Luo**,   **Boyi Qian**
 
-Our code is based on the paper: 
+Our code was implemented based on the paper to convert it as a multi-view method: 
 **Learning to Reconstruct 3D Human Pose and Shape via Model-fitting in the Loop**  
 [Nikos Kolotouros](https://www.seas.upenn.edu/~nkolot/)\*, [Georgios Pavlakos](https://www.seas.upenn.edu/~pavlakos/)\*, [Michael J. Black](https://ps.is.mpg.de/~black), [Kostas Daniilidis](http://www.cis.upenn.edu/~kostas/)  
 ICCV 2019  
@@ -16,10 +16,16 @@ conda activate 11785_project
 pip install -U pip
 pip install -r requirements.txt
 ```
-Currently we had problems with pyrender, but we will release the instructions for installation in the future
+
+Currently we had problems with neural render , but we will release the instructions for installation in the future
 * We have met many issues with the library dependencies, and here is the document for the potential issues and corresponding sotlutions: 
 * https://docs.google.com/document/d/1JF2b6cpeUDmMMjE2h9JngXvWX_GkkB01StVps6XqJpI/edit?usp=sharing
-* We have tested torch = 2.0.0, torchvision = 0.15.1, and cuda = 11.7 on Ubuntu 20.04. Please make sure your library dependencies are correct
+* We have tested the code on torch = 2.0.0, torchvision = 0.15.1, and cuda = 11.7 on Ubuntu 20.04. Please make sure your library dependencies are correct
+* Instead of the neural render, we used the pytorch3d with customized algorithms to display our vertices results:
+
+<p float="left">
+   <img src="https://github.com/zhixionl/11785_final_project/assets/video_gif 1.gif" width="100%">
+</p>
 
 
 ## Fetch data
