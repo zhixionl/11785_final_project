@@ -58,7 +58,7 @@ Running the above command will compute the MPJPE and Reconstruction Error on the
 2. Human3.6M Protocol 2 ```--dataset=h36m-p2```
 3. MPI-INF-3DHP ```--dataset=mpi-inf-3dhp```
 
-# Currently our pipeline only uses the dataset from MPI-INF-3DHP, but in the future, we will add more dataset for the future improvements
+### Currently our pipeline only uses the dataset from MPI-INF-3DHP, but in the future, we will add more dataset for the future improvements
 
 You can also save the results (predicted SMPL parameters, camera and 3D pose) in a .npz file using ```--result=out.npz```. Since we don't have the access to Human3.6M for now, as explained below, we only use MPI-INF-3DHP for current implementation for the midterm report, but we will use NeuralAnnot for to obtain the ground truth SMPL from Human3.6M for the final project. 
 
