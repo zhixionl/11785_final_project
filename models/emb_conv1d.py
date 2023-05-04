@@ -38,7 +38,6 @@ class emb_conv1d(nn.Module):
 
         # Obtain the initial pose parameters
         pred_rotmat0, pred_betas0, pred_camera0=self.regressor.forward(e0, init_pose=init_pose, init_shape=init_shape, init_cam=init_cam, n_iter=3)
-        
 
         # pelvis and camera of img0 SMPL param
         pelvis0 = pred_rotmat0[:,[0]]
