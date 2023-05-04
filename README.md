@@ -24,7 +24,7 @@ Currently we had problems with neural render , but we will release the instructi
 * Instead of the neural render, we used the pytorch3d with customized algorithms to display our vertices results:
 
 <p float="left">
-   <img src="https://github.com/zhixionl/11785_final_project/assets/video_gif 1.gif" width="100%">
+   <img src="[https://github.com/zhixionl/11785_final_project/assets/video_gif 1.gif](https://raw.githubusercontent.com/zhixionl/11785_final_project/main/assets/video_gif%201.gif?token=GHSAT0AAAAAACAJQEWV7TYBLTA764FCWX4GZCTASSQ)" width="100%">
 </p>
 
 
