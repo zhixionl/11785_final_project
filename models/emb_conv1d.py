@@ -44,11 +44,6 @@ class emb_conv1d(nn.Module):
         pelvis0 = pred_rotmat0[:,[0]]
         camera0 = pred_camera0
 
-        # pose0_no_pelvis=pred_rotmat0[:,1:]
-        # shape0=pred_betas0
-
-        # averaged_embedding=(e0+e1)/2
-        # e_concat=torch.cat((e0,e1),dim=1)
         e_stacked = torch.stack((e0,e1), dim=1)
         e_combined = self.conv1d.forward(e_stacked)
         e_combined = e_combined.view(e_combined.shape[0], -1) # shape should be (batch_size, 1000) if convnext
